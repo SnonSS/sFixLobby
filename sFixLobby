@@ -1,0 +1,529 @@
+package sFixLobby;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreeperPowerEvent;
+import org.bukkit.event.entity.EntityBreedEvent;
+import org.bukkit.event.entity.HorseJumpEvent;
+import org.bukkit.event.entity.SlimeSplitEvent;
+import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerVelocityEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleCollisionEvent;
+import org.bukkit.event.vehicle.VehicleCreateEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
+import org.bukkit.event.vehicle.VehicleEvent;
+import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
+import org.bukkit.event.vehicle.VehicleCollisionEvent;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
+import org.bukkit.event.vehicle.VehicleUpdateEvent;
+import org.bukkit.event.player.PlayerChangedMainHandEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.server.TabCompleteEvent;
+import org.bukkit.event.player.PlayerChatTabCompleteEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.event.weather.ThunderChangeEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.Bukkit;
+import sFixLobby.Main;
+
+@SuppressWarnings({ "unused", "deprecation" })
+public class Main extends JavaPlugin implements Listener {
+	 
+	  private static Main p;
+	
+	  public static ArrayList<String> allow_cmd;
+	
+	  public static FileConfiguration config;
+	  
+	  public static JavaPlugin plugin;
+	  
+	  private String colorize(String text) {
+	  return ChatColor.translateAlternateColorCodes('&', "&f" + text);
+	  
+	  }
+	  
+	  @SuppressWarnings({ "unchecked", "rawtypes" })
+	  public static void loadConfig(FileConfiguration cfg) {
+	  allow_cmd = (ArrayList)cfg.getStringList("allow_cmd");
+	  
+	  }
+	  
+	  @SuppressWarnings("static-access")
+	public void onEnable() {
+		this.saveDefaultConfig();
+	    Main.loadConfig(this.getConfig());
+	    getLogger().info("Enabled");
+	    long time = System.currentTimeMillis();
+	    plugin = this;
+	    this.config = getConfig("config.yml");
+	    getServer().getPluginManager().registerEvents(this, (Plugin)this);
+	    for (World w : Bukkit.getWorlds())
+	      w.setGameRuleValue("doDaylightCycle", "false");
+	    for (World w : Bukkit.getWorlds())
+		      w.setGameRuleValue("announceAdvancements", "false");
+	}
+
+	public void onDisable() {
+	    getLogger().info("Disabled");
+	  }
+	      
+	private FileConfiguration getConfig(String name) {
+	    File f = new File(getDataFolder(), name);
+	    if (getResource(name) == null)
+	      return save((FileConfiguration)YamlConfiguration.loadConfiguration(f), name); 
+	    if (!f.exists())
+	      saveResource(name, false); 
+	    return (FileConfiguration)YamlConfiguration.loadConfiguration(f);
+	  }
+	  
+	  private FileConfiguration save(FileConfiguration config, String name) {
+	    try {
+	      config.save(new File(getDataFolder(), name));
+	    } catch (IOException e) {
+	      e.printStackTrace();
+	    } 
+	    return config;
+	  }
+	
+	@EventHandler
+	public void PlayerChatTabCompleteEvent(PlayerChatTabCompleteEvent e) {
+	if (Main.config.getBoolean("noPlayerChatTabCompleteEvent"))
+	((Cancellable) e).setCancelled(true);
+		    
+	}	    
+	  
+	@EventHandler
+    public void PlayerVelocityEvent(PlayerVelocityEvent e) {
+	if (Main.config.getBoolean("noPlayerVelocityEvent"))
+	e.setCancelled(true);
+	    
+    }	  
+	  
+	@EventHandler
+	public void BlockBreakEvent(BlockBreakEvent e) {
+	if (Main.config.getBoolean("noBlockBreakEvent"))
+    e.setCancelled(true);
+    
+	}
+		
+	@EventHandler
+	public void BlockBurnEvent(BlockBurnEvent e) {
+	if (Main.config.getBoolean("noBlockBurnEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void LeavesDecayEvent(LeavesDecayEvent e) {
+	if (Main.config.getBoolean("noLeavesDecayEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void BlockDamageEvent(BlockDamageEvent e) {
+	if (Main.config.getBoolean("noBlockDamageEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void BlockPlaceEvent(BlockPlaceEvent e) {
+	if (Main.config.getBoolean("noBlockPlaceEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void EntityDamageByEntityEvent(EntityDamageByEntityEvent e) {
+	if (Main.config.getBoolean("noEntityDamageByEntityEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void EntityDamageEvent(EntityDamageEvent e) {
+	if (Main.config.getBoolean("noEntityDamageEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void FoodLevelChangeEvent(FoodLevelChangeEvent e) {
+	if (Main.config.getBoolean("noFoodLevelChangeEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void EntityChangeBlockEvent(EntityChangeBlockEvent e) {
+	if (Main.config.getBoolean("noEntityChangeBlockEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void EntityExplodeEvent(EntityExplodeEvent e) {
+	if (Main.config.getBoolean("noEntityExplodeEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void PotionSplashEvent(PotionSplashEvent e) {
+	if (Main.config.getBoolean("noPotionSplashEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void CreatureSpawnEven(CreatureSpawnEvent e) {
+	if (Main.config.getBoolean("noCreatureSpawnEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void CreeperPowerEvent(CreeperPowerEvent e) {
+	if (Main.config.getBoolean("noCreeperPowerEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void EntityBreedEvent(EntityBreedEvent e) {
+	if (Main.config.getBoolean("noEntityBreedEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void HorseJumpEvent(HorseJumpEvent e) {
+	if (Main.config.getBoolean("noHorseJumpEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void SlimeSplitEven(SlimeSplitEvent e) {
+	if (Main.config.getBoolean("noSlimeSplitEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void PlayerChatEvent(PlayerChatEvent e) {
+	if (Main.config.getBoolean("noPlayerChatEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void PlayerDropItemEvent(PlayerDropItemEvent e) {
+	if (Main.config.getBoolean("noPlayerDropItemEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void PlayerInteractEntityEvent(PlayerInteractEntityEvent e) {
+	if (Main.config.getBoolean("noPlayerInteractEntityEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void PlayerInteractEvent(PlayerInteractEvent e) {
+	if (Main.config.getBoolean("noPlayerInteractEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void AsyncPlayerChatEvent(AsyncPlayerChatEvent e) {
+	if (Main.config.getBoolean("noAsyncPlayerChatEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void LightningStrikeEvent(LightningStrikeEvent e) {
+	if (Main.config.getBoolean("noLightningStrikeEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void WeatherChangeEvent(WeatherChangeEvent e) {
+	if (Main.config.getBoolean("noWeatherChangeEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void ThunderChangeEvent(ThunderChangeEvent e) {
+	if (Main.config.getBoolean("noThunderChangeEvent"))
+	e.setCancelled(true);
+	
+	}
+	
+	@EventHandler
+	public void HangingBreakByEntityEvent(HangingBreakByEntityEvent e) {
+	if (Main.config.getBoolean("noHangingBreakByEntityEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void BlockIgniteEvent(BlockIgniteEvent e) {
+	if (Main.config.getBoolean("noBlockIgniteEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerCommandPreprocessEvent(PlayerCommandPreprocessEvent e) {
+	if (Main.config.getBoolean("noPlayerCommandPreprocessEvent"))
+	if (!Main.allow_cmd.contains(e.getMessage().split(" ")[0].replace("/", ""))) 
+    e.setCancelled(true);
+	
+	}
+	
+	
+	@EventHandler
+	public void PlayerTeleportEvent(PlayerTeleportEvent e) {
+	if (Main.config.getBoolean("noPlayerTeleportEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void CraftItemEvent(CraftItemEvent e) {
+	if (Main.config.getBoolean("noCraftItemEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void InventoryOpenEvent(InventoryOpenEvent e) {
+	if (Main.config.getBoolean("noInventoryOpenEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void InventoryDragEvent(InventoryDragEvent e) {
+	if (Main.config.getBoolean("noInventoryDragEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleDamageEvent(VehicleDamageEvent e) {
+	if (Main.config.getBoolean("noVehicleDamageEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleCreateEvent(VehicleCreateEvent e) {
+	if (Main.config.getBoolean("noVehicleCreateEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleDestroyEvent(VehicleDestroyEvent e) {
+	if (Main.config.getBoolean("noVehicleDestroyEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleEnterEvent(VehicleEnterEvent e) {
+	if (Main.config.getBoolean("noVehicleEnterEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleEntityCollisionEvent(VehicleEntityCollisionEvent e) {
+	if (Main.config.getBoolean("noVehicleEntityCollisionEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void VehicleExitEvent(VehicleExitEvent e) {
+	if (Main.config.getBoolean("noVehicleExitEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void BlockPhysicsEvent(BlockPhysicsEvent e) {
+	if (Main.config.getBoolean("noBlockPhysicsEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void BlockPistonExtendEvent(BlockPistonExtendEvent e) {
+	if (Main.config.getBoolean("noBlockPistonExtendEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void BlockPistonRetractEvent(BlockPistonRetractEvent e) {
+	if (Main.config.getBoolean("noBlockPistonRetractEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void SignChangeEvent(SignChangeEvent e) {
+	if (Main.config.getBoolean("noSignChangeEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void BlockDispenseEvent(BlockDispenseEvent e) {
+	if (Main.config.getBoolean("noBlockDispenseEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerMoveEvent(PlayerMoveEvent e) {
+	if (Main.config.getBoolean("noPlayerMoveEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerEditBookEvent(PlayerEditBookEvent e) {
+	if (Main.config.getBoolean("noPlayerEditBookEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerInteractAtEntityEvent(PlayerInteractAtEntityEvent e) {
+	if (Main.config.getBoolean("noPlayerInteractAtEntityEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerToggleFlightEvent(PlayerToggleFlightEvent e) {
+	if (Main.config.getBoolean("noPlayerToggleFlightEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerToggleSneakEvent(PlayerToggleSneakEvent e) {
+	if (Main.config.getBoolean("noPlayerToggleSneakEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerToggleSprintEvent(PlayerToggleSprintEvent e) {
+	if (Main.config.getBoolean("noPlayerToggleSprintEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerPortalEvent(PlayerPortalEvent e) {
+	if (Main.config.getBoolean("noPlayerPortalEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void PlayerFishEvent(PlayerFishEvent e) {
+	if (Main.config.getBoolean("noPlayerFishEvent"))
+	e.setCancelled(true);
+	
+    }
+	
+	@EventHandler
+	public void TabCompleteEvent(TabCompleteEvent e) {
+	if (Main.config.getBoolean("noTabCompleteEvent"))
+	e.setCancelled(true);
+	
+	}
+
+public static void info(Object text) {
+    Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[" + Main.plugin.getName() + "] " + text);
+  }
+  
+  public static void warning(Object text) {
+    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[" + Main.plugin.getName() + "] " + text);
+  }
+  
+  public static void error(Object text) {
+    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[" + Main.plugin.getName() + "] " + text);
+  }
+}
