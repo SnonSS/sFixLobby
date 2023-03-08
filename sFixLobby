@@ -56,6 +56,11 @@ import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleCollisionEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.vehicle.VehicleUpdateEvent;
 import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
@@ -148,16 +153,44 @@ public class Main extends JavaPlugin implements Listener {
 	public void PlayerChatTabCompleteEvent(PlayerChatTabCompleteEvent e) {
 	if (Main.config.getBoolean("noPlayerChatTabCompleteEvent"))
 	((Cancellable) e).setCancelled(true);
-		    
-	}	    
-	  
+		
+	}
+	
 	@EventHandler
-    public void PlayerVelocityEvent(PlayerVelocityEvent e) {
-	if (Main.config.getBoolean("noPlayerVelocityEvent"))
-	e.setCancelled(true);
-	    
-    }	  
-	  
+    public void InventoryClickEvent(InventoryClickEvent e) {
+	if (Main.config.getBoolean("noInventoryClickEvent"))
+	e.setCancelled(true);  
+	
+	}
+	
+	@EventHandler
+    public void InventoryInteractEvent(InventoryInteractEvent e) {
+	if (Main.config.getBoolean("noInventoryInteractEvent"))
+	e.setCancelled(true);  
+	
+	}
+	
+	@EventHandler
+    public void InventoryCreativeEvent(InventoryCreativeEvent e) {
+	if (Main.config.getBoolean("noInventoryCreativeEvent"))
+	e.setCancelled(true);  
+	
+	}
+	
+	@EventHandler
+    public void InventoryMoveItemEvent(InventoryMoveItemEvent e) {
+	if (Main.config.getBoolean("noInventoryMoveItemEvent"))
+	e.setCancelled(true);  
+	
+	}
+	
+	@EventHandler
+    public void InventoryPickupItemEvent(InventoryPickupItemEvent e) {
+	if (Main.config.getBoolean("noInventoryPickupItemEvent"))
+	e.setCancelled(true);  
+	
+	}
+	
 	@EventHandler
 	public void BlockBreakEvent(BlockBreakEvent e) {
 	if (Main.config.getBoolean("noBlockBreakEvent"))
